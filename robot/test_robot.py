@@ -25,10 +25,12 @@ plane_id = p.loadURDF("plane.urdf", useMaximalCoordinates=True)
 r2d2_id = p.loadURDF("r2d2.urdf", basePosition=r2d2_pos, useMaximalCoordinates=True)
 robot_id = p.loadURDF("./miniBox.urdf", basePosition=robot_pos, useMaximalCoordinates=True)
 
-
 p.setGravity(0, 0, -9.8)
 p.setRealTimeSimulation(1)
 p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
+
+# TODO: 1. 增加机器人键盘控制与reset按钮
+# TODO： 2. 添加并测试摄像头、深度激光探测器
 
 while True:
     pass

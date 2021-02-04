@@ -1,114 +1,193 @@
 <?xml version='1.0'?>
 <robot name="miniBox">
 
-  <!-- Base Link -->
-  <link name="base_link">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-          <cylinder length="0.2" radius="0.5" />
-      </geometry>
-      <material name="white">
-        <color rgba="1 1 1 1"/>
-      </material>
-    </visual>
-    <!-- Base collision, mass and inertia -->
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-          <cylinder length="0.2" radius="0.4" />
-      </geometry>
-    </collision>
-    <inertial>
-      <mass value="5"/>
-      <inertia ixx="0.13" ixy="0.0" ixz="0.0" iyy="0.21" iyz="0.0" izz="0.13"/>
-    </inertial>
+    <!-- Base Link -->
+    <link name="base_link">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+            <cylinder length="0.2" radius="0.5" />
+        </geometry>
+        <material name="white">
+            <color rgba="1 1 1 1"/>
+        </material>
+        </visual>
+        <!-- Base collision, mass and inertia -->
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="0.2" radius="0.5" />
+            </geometry>
+        </collision>
+            <inertial>
+            <mass value="5"/>
+            <inertia ixx="0.13" ixy="0.0" ixz="0.0" iyy="0.21" iyz="0.0" izz="0.13"/>
+        </inertial>
 
-    <!-- front follow wheel pillar -->
-    <visual name="front_follow_wheel_pillar">
-      <origin xyz="0.3 0 -0.125" rpy="0 0 0" />
-      <geometry>
-        <sphere radius="0.075" />
-      </geometry>
-      
-    </visual>
-    <!-- collision, mass and inertia -->
-    <collision>
-      <origin xyz="0.2 0 -0.125" rpy="0 0 0" />
-      <geometry>
-        <sphere radius="0.05" />
-      </geometry>
-    </collision>
-    <inertial>
-      <mass value="0.5"/>
-      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
-    </inertial>
-  </link>
+        <!-- top -->
+        <visual name="top">
+        <origin xyz="0.3 0 0.145" rpy="0 0 0" />
+        <geometry>
+            <box size="0.2 0.5 0.03"/>
+        </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0.3 0 0.145" rpy="0 0 0" />
+            <geometry>
+                <box size="0.2 0.5 0.03"/>
+            </geometry>
+        </collision>
+            <inertial>
+            <mass value="1"/>
+            <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+        </inertial>
 
+        <visual name="top_left">
+        <origin xyz="0.3 0.235 0.115" rpy="0 0 0" />
+        <geometry>
+            <box size="0.2 0.03 0.03"/>
+        </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0.3 0.235 0.115" rpy="0 0 0" />
+            <geometry>
+                <box size="0.2 0.03 0.03"/>
+            </geometry>
+        </collision>
 
+        <visual name="top_right">
+        <origin xyz="0.3 -0.235 0.115" rpy="0 0 0" />
+        <geometry>
+            <box size="0.2 0.03 0.03"/>
+        </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0.3 -0.235 0.115" rpy="0 0 0" />
+            <geometry>
+                <box size="0.2 0.03 0.03"/>
+            </geometry>
+        </collision>
 
-  <!-- Right Wheel -->
-  <link name="right_wheel">
-    <visual>
-      <origin xyz="0 0 0" rpy="1.570795 0 0" />
-      <geometry>
-          <cylinder length="0.1" radius="0.2" />
-      </geometry>
-      <material name="darkgray">
-        <color rgba="0.2 0.2 0.2 1"/>
-      </material>
-    </visual>
-    <!-- Right Wheel collision, mass and inertia -->
-    <collision>
-      <origin xyz="0 0 0" rpy="1.570795 0 0" />
-      <geometry>
-          <cylinder length="0.1" radius="0.2" />
-      </geometry>
-    </collision>
-    <inertial>
-      <mass value="0.5"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.005" iyz="0.0" izz="0.005"/>
-    </inertial>
+    </link>
 
-  </link>
+    <link name="front_follow_wheel_pillar">
+        <!-- front follow wheel pillar -->
+        <visual>
+        <geometry>
+            <cylinder radius="0.075" length="0.03"/>
+        </geometry>
+        <material name="white"/>
+        </visual>
+        <collision>
+        <geometry>
+            <cylinder radius="0.075" length="0.03"/>
+        </geometry>
+        </collision>
+        <inertial>
+        <mass value="0.2"/>
+        <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+        </inertial>
+    </link>
 
-  <!-- Right Wheel joint -->
-  <joint name="joint_right_wheel" type="continuous">
-    <parent link="base_link"/>
-    <child link="right_wheel"/>
-    <origin xyz="0 -0.30 0" rpy="0 0 0" /> 
-    <axis xyz="0 1 0" />
-  </joint>
+    <!-- joint of base and front follow wheel pillar -->
+    <joint name="base_to_front_follow_wheel_pillar" type="continuous">
+        <parent link="base_link"/>
+        <child link="front_follow_wheel_pillar"/>
+        <axis xyz="0 0 1"/>
+        <origin xyz="0.35 0 -0.115" rpy="0 0 0" />
+    </joint>
 
-  <!-- Left Wheel -->
-  <link name="left_wheel">
-    <visual>
-      <origin xyz="0 0 0" rpy="1.570795 0 0" />
-      <geometry>
-          <cylinder length="0.1" radius="0.2" />
-      </geometry>
-      <material name="darkgray">
-        <color rgba="0.2 0.2 0.2 1"/>
-      </material>
-    </visual>
-    <!-- Left Wheel collision, mass and inertia -->
-    <collision>
-      <origin xyz="0 0 0" rpy="1.570795 0 0" />
-      <geometry>
-          <cylinder length="0.1" radius="0.2" />
-      </geometry>
-    </collision>
-    <inertial>
-      <mass value="0.5"/>
-      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.005" iyz="0.0" izz="0.005"/>
-    </inertial>
-  </link>
+    <!-- front follow wheel -->
+    <link name="front_follow_wheel">
+        <visual>
+        <geometry>
+            <cylinder radius="0.035" length="0.05"/>
+        </geometry>
+        <material name="darkgray">
+            <color rgba="0.2 0.2 0.2 1"/>
+        </material>
+        </visual>
+        <collision>
+        <geometry>
+            <cylinder radius="0.035" length="0.05"/>
+        </geometry>
+        </collision>
+        <inertial>
+        <mass value="0.3"/>
+        <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+        </inertial>
+    </link>
 
-  <!-- Left Wheel joint -->
-  <joint name="joint_left_wheel" type="continuous">
-    <parent link="base_link"/>
-    <child link="left_wheel"/>
-    <origin xyz="0 0.30 0" rpy="0 0 0" /> 
-    <axis xyz="0 1 0" />
-  </joint>
+    <!-- joint of front pillar and front follow wheel -->
+    <joint name="front_pillar_to_front_follow_wheel" type="continuous">
+        <parent link="front_follow_wheel_pillar"/>
+        <child link="front_follow_wheel"/>
+        <axis xyz="0 0 1"/>
+        <origin xyz="0 0 -0.05" rpy="1.57075 0 0" />
+    </joint>
+
+    <!-- Right Wheel -->
+    <link name="right_wheel">
+        <visual>
+        <origin xyz="0 0 0" rpy="1.570795 0 0" />
+        <geometry>
+            <cylinder length="0.1" radius="0.2" />
+        </geometry>
+        <material name="darkgray">
+            <color rgba="0.2 0.2 0.2 1"/>
+        </material>
+        </visual>
+        <!-- Right Wheel collision, mass and inertia -->
+        <collision>
+            <origin xyz="0 0 0" rpy="1.570795 0 0" />
+            <geometry>
+                <cylinder length="0.1" radius="0.2" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.5"/>
+            <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.005" iyz="0.0" izz="0.005"/>
+        </inertial>
+
+    </link>
+
+    <!-- Right Wheel joint -->
+    <joint name="joint_right_wheel" type="continuous">
+        <parent link="base_link"/>
+        <child link="right_wheel"/>
+        <origin xyz="-0.1 -0.30 0" rpy="0 0 0" /> 
+        <axis xyz="0 1 0" />
+    </joint>
+
+    <!-- Left Wheel -->
+    <link name="left_wheel">
+        <visual>
+        <origin xyz="0 0 0" rpy="1.570795 0 0" />
+        <geometry>
+            <cylinder length="0.1" radius="0.2" />
+        </geometry>
+        <material name="darkgray">
+            <color rgba="0.2 0.2 0.2 1"/>
+        </material>
+        </visual>
+        <!-- Left Wheel collision, mass and inertia -->
+        <collision>
+            <origin xyz="0 0 0" rpy="1.570795 0 0" />
+            <geometry>
+                <cylinder length="0.1" radius="0.2" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.5"/>
+            <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.005" iyz="0.0" izz="0.005"/>
+        </inertial>
+    </link>
+
+    <!-- Left Wheel joint -->
+    <joint name="joint_left_wheel" type="continuous">
+        <parent link="base_link"/>
+        <child link="left_wheel"/>
+        <origin xyz="-0.1 0.30 0" rpy="0 0 0" /> 
+        <axis xyz="0 1 0" />
+    </joint>
 </robot>
