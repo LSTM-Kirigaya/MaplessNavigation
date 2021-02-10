@@ -10,8 +10,9 @@ sys.path.append(path)
 import pybullet as p
 import pybullet_data
 from time import sleep
-from math import tan
+from math import tan, sin, cos
 import numpy as np
+from pprint import pprint
 
 # constant var
 UP = p.B3G_DOWN_ARROW               
@@ -31,6 +32,9 @@ MULTIPLY = 2.0
 
 DEBUG_TEXT_COLOR = [0., 0., 0.]     # debug文本的颜色
 DEBUG_TEXT_SIZE = 1.2               # debug文本的大小
+MISS_COLOR = [0., 1., 0.]           # 没有命中的激光的颜色
+HIT_COLOR = [1., 0., 0.]            # 命中的激光的颜色
+RAY_DEBUG_LINE_WIDTH = 2.           # 激光的debug线的宽度
 
 # 机器人参数
 BASE_THICKNESS = 0.2                # 底盘厚度
@@ -269,8 +273,45 @@ def addFence(center_pos : list, internal_length : float, internal_width : float,
     )
     return L1, L2, W1, W2
 
-if __name__ == "__main__":
+# 进行一组激光探测
+def rayTest(robot_id : int, ray_length : float, ray_num : int = 5):
+    """
+    :param robot_id:   不多说
+    :param ray_length: 激光长度
+    :param ray_num:    激光数量(需要说明，激光头均匀分布在-pi/2到pi/2之间)
+    """
+    basePos, baseOrientation = p.getBasePositionAndOrientation(robot_id)
+    matrix = p.getMatrixFromQuaternion(baseOrientation)
+    basePos = np.array(basePos)
+    matrix = np.array(matrix).reshape([3, 3])
 
+    # 选定在机器人的本地坐标系中中心到几个激光发射点的向量
+    # 此处的逻辑为先计算出local坐标系中的距离单位向量，再变换到世界坐标系中
+    unitRayVecs = np.array([[cos(alpha), sin(alpha), 0]  for alpha in np.linspace(-np.pi / 2., np.pi / 2., ray_num)])
+    unitRayVecs = unitRayVecs.dot(matrix.T)
+    # 通过广播运算得到世界坐标系中所有激光发射点的坐标
+    rayBegins = basePos + BASE_RADIUS * unitRayVecs
+    rayTos = rayBegins + ray_length * unitRayVecs
+    results = p.rayTestBatch(rayBegins, rayTos)
+    return rayBegins, rayTos, results
+
+def checkCollision(robot_id : int, debug : bool):
+    if p.getContactPoints(bodyA=robot_id, linkIndexA=-1):
+        print("collsion happen!")
+        return True
+    # P_min, P_max = p.getAABB(robot_id)
+    # id_tuple = p.getOverlappingObjects(P_min, P_max)
+    # if len(id_tuple) > 1:
+    #     for ID, _ in id_tuple:
+    #         if ID == robot_id:      # 自己于自己的碰撞不算
+    #             continue
+    #         else:
+    #             if debug:
+    #                 print(f"hit happen! hit object is {p.getBodyInfo(ID)}")
+    #             return True
+    return False
+
+if __name__ == "__main__":
     # 连接引擎
     cid = p.connect(p.GUI)
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
@@ -321,7 +362,6 @@ if __name__ == "__main__":
         textColorRGB=DEBUG_TEXT_COLOR,
         textSize=DEBUG_TEXT_SIZE
     )
-
     # 设置机器人位置和欧拉角的跟随文本
     text_id = p.addUserDebugText(
         text="",
@@ -329,6 +369,12 @@ if __name__ == "__main__":
         textColorRGB=DEBUG_TEXT_COLOR,
         textSize=DEBUG_TEXT_SIZE
     )
+    # 设置激光debug线
+    rayDebugLineIds = []
+    froms, tos, results = rayTest(robot_id, ray_length=5)
+    for index, result in enumerate(results):
+        color = MISS_COLOR if result[0] == -1 else HIT_COLOR
+        rayDebugLineIds.append(p.addUserDebugLine(froms[index], tos[index], color))
 
     # 增加控件，主要是重置用的reset按钮和调节全局参数的三个slider
     """
@@ -383,6 +429,18 @@ if __name__ == "__main__":
             textSize=DEBUG_TEXT_SIZE,
             replaceItemUniqueId=door_id
         )
+        # 设置合成摄像头
         setCameraPicAndGetPic(robot_id)
-    
+        # 激光探测
+        froms, tos, results = rayTest(robot_id, ray_length=5)
+        for index, result in enumerate(results):
+            color = MISS_COLOR if result[0] == -1 else HIT_COLOR
+            rayDebugLineIds[index] = p.addUserDebugLine(
+                froms[index], tos[index], color, RAY_DEBUG_LINE_WIDTH, 
+                replaceItemUniqueId=rayDebugLineIds[index]
+            )
+        # 碰撞探测
+        checkCollision(robot_id, debug=True)
+
+
     p.disconnect(cid)
