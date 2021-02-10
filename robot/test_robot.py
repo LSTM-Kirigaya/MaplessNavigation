@@ -10,15 +10,18 @@ sys.path.append(path)
 import pybullet as p
 import pybullet_data
 from time import sleep
+from math import tan
+import numpy as np
 
-# 常量
-UP = p.B3G_DOWN_ARROW
+# constant var
+UP = p.B3G_DOWN_ARROW               
 DOWN = p.B3G_UP_ARROW
 LEFT = p.B3G_RIGHT_ARROW
 RIGHT = p.B3G_LEFT_ARROW
 
 R2D2_POS = [1., 1., 1.]
 ROBOT_POS = [0., 0., 0.5]
+DOOR_POS = [-2, 0, 0]
 
 LEFT_WHEEL_JOINT_INDEX = 3
 RIGHT_WHEEL_JOINT_INDEX = 2
@@ -26,22 +29,15 @@ MAX_FORCE = 10.
 TARGET_VELOCITY = 5.
 MULTIPLY = 2.0
 
+DEBUG_TEXT_COLOR = [0., 0., 0.]     # debug文本的颜色
+DEBUG_TEXT_SIZE = 1.2               # debug文本的大小
 
-# 连接引擎
-cid = p.connect(p.GUI)
-p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
-p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
+# 机器人参数
+BASE_THICKNESS = 0.2                # 底盘厚度
+BASE_RADIUS = 0.5                   # 底盘半径
+WHEEL_THICKNESS = 0.1               # 轮子厚度
+WHEEL_RADIUS = 0.2                  # 轮子半径
 
-# 添加资源路径
-p.setAdditionalSearchPath(pybullet_data.getDataPath())
-
-# 载入机器人
-plane_id = p.loadURDF("plane.urdf", useMaximalCoordinates=True)
-r2d2_id = p.loadURDF("r2d2.urdf", basePosition=R2D2_POS, useMaximalCoordinates=True)
-robot_id = p.loadURDF("./robot/miniBox.urdf", basePosition=ROBOT_POS, useMaximalCoordinates=True)
-
-R2D2_POS, R2D2_Orientation = p.getBasePositionAndOrientation(r2d2_id)
-ROBOT_POS, ROBOT_Orientation = p.getBasePositionAndOrientation(robot_id)
 
 """
 miniBox关节信息如下：
@@ -62,18 +58,6 @@ miniBox关节信息如下：
         joint type:  0
 """
 
-# miniBox的两个随动关节设为禁用
-p.setJointMotorControlArray(
-    bodyUniqueId=robot_id,
-    jointIndices=[0, 1],
-    controlMode=p.VELOCITY_CONTROL,
-    forces=[0., 0.]
-)
-
-p.setGravity(0, 0, -9.8)
-p.setRealTimeSimulation(1)
-p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
-
 # 获取节点信息
 def getJointInfo(robot_id : int):
     for i in range(p.getNumJoints(robot_id)):
@@ -84,6 +68,7 @@ def getJointInfo(robot_id : int):
             joint type:  {info[2]}
         """)
 
+# 根据输入的键盘字典执行小车运动
 def control_miniBox(key_dict : dict):
     if len(key_dict) == 0:
         p.setJointMotorControlArray(
@@ -161,36 +146,243 @@ def control_miniBox(key_dict : dict):
         )
 
 # TODO： 2. 添加并测试摄像头、深度激光探测器
+def setCameraPicAndGetPic(robot_id : int, width : int = 224, height : int = 224):
+    """
+    给合成摄像头设置图像并返回robot_id对应的图像
+    摄像头的位置为miniBox前头的位置
+    """
+    basePos, baseOrientation = p.getBasePositionAndOrientation(robot_id)
+    # 从四元数中获取变换矩阵，从中获知指向(左乘(1,0,0)，因为在原本的坐标系内，摄像机的朝向为(1,0,0))
+    matrix = p.getMatrixFromQuaternion(baseOrientation)
+    tx_vec = np.array([matrix[0], matrix[3], matrix[6]])              # 变换后的x轴
+    tz_vec = np.array([matrix[2], matrix[5], matrix[8]])              # 变换后的z轴
 
-# 增加控件，主要是重置用的reset按钮和调节全局参数的三个slider
+    basePos = np.array(basePos)
+    # 摄像头的位置
+    cameraPos = basePos + BASE_RADIUS * tx_vec + 0.5 * BASE_THICKNESS * tz_vec
+    targetPos = cameraPos + 1 * tx_vec
+
+    viewMatrix = p.computeViewMatrix(
+        cameraEyePosition=cameraPos,
+        cameraTargetPosition=targetPos,
+        cameraUpVector=tz_vec
+    )
+    projectionMatrix = p.computeProjectionMatrixFOV(
+        fov=50.0,               # 摄像头的视线夹角
+        aspect=1.0,
+        nearVal=0.01,            # 摄像头焦距下限
+        farVal=20               # 摄像头能看上限
+    )
+
+    width, height, rgbImg, depthImg, segImg = p.getCameraImage(
+        width=width, height=height,
+        viewMatrix=viewMatrix,
+        projectionMatrix=projectionMatrix
+    )
+    
+    return width, height, rgbImg, depthImg, segImg
+
+# 添加门
+def addDoor(a : list, b : list, c : list, d : list, color : list = [0., 0., 0.], width : int = 1):
+    """
+    a,b,c,d 代表门的四个角的坐标
+    return: 勾勒出门的四条边的debug线的id
+    """
+    ab = p.addUserDebugLine(a, b, lineColorRGB=color, lineWidth=width)
+    bc = p.addUserDebugLine(b, c, lineColorRGB=color, lineWidth=width)
+    cd = p.addUserDebugLine(c, d, lineColorRGB=color, lineWidth=width)
+    da = p.addUserDebugLine(d, a, lineColorRGB=color, lineWidth=width)
+    return ab, bc, cd, da
+
 """
-slider控制的参数为：
-        MAX_FORCE 差分驱动轮的最大马力                          (>0)
-        TARGET_VELOCITY 差分驱动轮的最大速度                    (>0)
-        MULTIPLY 转弯时，差分驱动轮的两个轮子的速度之比（大的比上小的） (>1)
+    以下的都是添加实体的几个函数，未说明的情况下，其中的pos都是形体与地面接触集合面的几何中心在世界坐标系中的坐标
+    因此所有的pos参数的第三维正常情况下都是0，代表紧贴地面
 """
-MAX_FORCE_param_id = p.addUserDebugParameter("MAX_FORCE", 0, 100, MAX_FORCE)
-TARGET_VELOCITY_param_id = p.addUserDebugParameter("TARGET_VELOCITY", 0, 100, TARGET_VELOCITY)
-MULTIPLY_param_id = p.addUserDebugParameter("MULTIPLY", 1, 10, MULTIPLY)
+# 添加圆柱体实体
+def addCylinder(pos : list, raidus : float, length : float, mass : float = 10000., rgba : list = [1. ,1. ,1., 1.]):
+    visual_shape = p.createVisualShape(p.GEOM_CYLINDER, radius=raidus, length=length, rgbaColor=rgba)
+    collision_shape = p.createCollisionShape(p.GEOM_CYLINDER, radius=raidus, height=length)
+    entity_id = p.createMultiBody(
+        baseMass=mass,
+        baseCollisionShapeIndex=collision_shape,
+        baseVisualShapeIndex=visual_shape,
+        basePosition=[pos[0], pos[1], pos[2] + length / 2.]
+    )
+    return entity_id
 
-reset_btn_id = p.addUserDebugParameter("reset", 1, 0, 0)
-previous_btn_value = p.readUserDebugParameter(reset_btn_id)
+def addSphere(pos : list, radius : float, mass : float = 10000., rgba : list = [1., 1. ,1., 1.]):
+    visual_shape = p.createVisualShape(p.GEOM_SPHERE, radius=radius, rgbaColor=rgba)
+    collision_shape = p.createCollisionShape(p.GEOM_SPHERE, radius=radius)
+    entity_id = p.createMultiBody(
+        baseMass=mass,
+        baseCollisionShapeIndex=collision_shape,
+        baseVisualShapeIndex=visual_shape,
+        basePosition=[pos[0], pos[1], pos[2] + radius]
+    )
+    return entity_id
 
-# 开始测试
-# getJointInfo(robot_id)
+def addBox(pos : list, halfExtents : list, mass : float = 10000., rgba=[1., 1., 1., 1.]):
+    visual_shape = p.createVisualShape(p.GEOM_BOX, halfExtents=halfExtents, rgbaColor=rgba)
+    collision_shape = p.createCollisionShape(p.GEOM_BOX, halfExtents=halfExtents)
+    entity_id = p.createMultiBody(
+        baseMass=mass,
+        baseCollisionShapeIndex=collision_shape,
+        baseVisualShapeIndex=visual_shape,
+        basePosition=[pos[0], pos[1], pos[2] + halfExtents[2]]
+    )
 
-while True:
-    # 读取并执行键盘信息
-    key_dict = p.getKeyboardEvents()
-    control_miniBox(key_dict)
-    # 读取并更新slider中的参数
-    MAX_FORCE = p.readUserDebugParameter(MAX_FORCE_param_id)
-    TARGET_VELOCITY = p.readUserDebugParameter(TARGET_VELOCITY_param_id)
-    MULTIPLY = p.readUserDebugParameter(MULTIPLY_param_id)
-    # 判断按钮是否被按下，若是，则重置机器人的位置
-    if p.readUserDebugParameter(reset_btn_id) != previous_btn_value:
-        p.resetBasePositionAndOrientation(robot_id, ROBOT_POS, ROBOT_Orientation)
-        p.resetBasePositionAndOrientation(r2d2_id, R2D2_POS, R2D2_Orientation)
-        previous_btn_value = p.readUserDebugParameter(reset_btn_id)
+def addFence(center_pos : list, internal_length : float, internal_width : float, height : float, thickness : float, mass : float = 10000., rgba : list = [1., 1., 1., 1.]):
+    """
+    :param center_pos:      围墙中心的坐标
+    :param internal_length: 内部长
+    :param internal_width:  内部宽
+    :param thickness:       厚度
+    :param mass:            质量
+    :param rgba:            表面意思
+    :return                 四个id，代表组成围墙的四个box的id
+    """
+    # L1和L2代表长那条线面对面的两面墙，长度为internal_length + 2 * thickness
+    L1 = addBox(
+        pos=[center_pos[0] + internal_width / 2. + thickness / 2., center_pos[1], center_pos[2]],
+        halfExtents=[thickness / 2., internal_length / 2. + thickness, height / 2.],
+        mass=mass / 4.,
+        rgba=rgba
+    )
+    L2 = addBox(
+        pos=[center_pos[0] - internal_width / 2. - thickness / 2., center_pos[1], center_pos[2]],
+        halfExtents=[thickness / 2., internal_length / 2. + thickness, height / 2.],
+        mass=mass / 4.,
+        rgba=rgba
+    )
+    # W1和W2代表宽那条线面对面的两面墙，长度为internal_length + 2 * thickness
+    W1 = addBox(
+        pos=[center_pos[0], center_pos[1] + internal_length / 2. + thickness / 2., center_pos[2]],
+        halfExtents=[internal_width / 2., thickness / 2., height / 2.],
+        mass=mass / 4.,
+        rgba=rgba
+    )
+    W2 = addBox(
+        pos=[center_pos[0], center_pos[1] - internal_length / 2. - thickness / 2., center_pos[2]],
+        halfExtents=[internal_width / 2., thickness / 2., height / 2.],
+        mass=mass / 4.,
+        rgba=rgba
+    )
+    return L1, L2, W1, W2
 
-p.disconnect(cid)
+if __name__ == "__main__":
+
+    # 连接引擎
+    cid = p.connect(p.GUI)
+    p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
+
+    # 添加资源路径
+    p.setAdditionalSearchPath(pybullet_data.getDataPath())
+
+    # 载入机器人和其他的物件
+    plane_id = p.loadURDF("plane.urdf", useMaximalCoordinates=True)
+    robot_id = p.loadURDF("./robot/miniBox.urdf", basePosition=ROBOT_POS, useMaximalCoordinates=True)
+    ROBOT_POS, ROBOT_Orientation = p.getBasePositionAndOrientation(robot_id)
+    # 加入几个足球
+    # p.loadURDF("soccerball.urdf", basePosition=[3, 3, 0], useMaximalCoordinates=True)
+    # p.loadURDF("soccerball.urdf", basePosition=[-3, 3, 0], useMaximalCoordinates=True)
+    # p.loadURDF("soccerball.urdf", basePosition=[3, -3, 0], useMaximalCoordinates=True)
+    # p.loadURDF("soccerball.urdf", basePosition=[-3, -3, 0], useMaximalCoordinates=True)
+
+    # 加入圆柱体实体
+    addCylinder(pos=[2, 2, 0], raidus=0.5, length=2.)
+    addSphere(pos=[-2, 2, 0], radius=1.)
+
+    addFence(
+        center_pos=[0, 0, 0],
+        internal_length=20, 
+        internal_width=20,
+        height=4,
+        thickness=2,
+        mass=10000.
+    )
+
+    # miniBox的两个随动关节设为禁用
+    p.setJointMotorControlArray(
+        bodyUniqueId=robot_id,
+        jointIndices=[0, 1],
+        controlMode=p.VELOCITY_CONTROL,
+        forces=[0., 0.]
+    )
+
+    p.setGravity(0, 0, -9.8)
+    p.setRealTimeSimulation(1)
+    p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
+
+    # 添加一个门，并增加显示和机器人距离的文本
+    addDoor([-2, 1, 0], [-2, -1, 0], [-2, -1, 3], [-2, 1, 3], color=[0., 1., 0.], width=2.)
+    door_id = p.addUserDebugText(
+        text="",
+        textPosition=DOOR_POS,
+        textColorRGB=DEBUG_TEXT_COLOR,
+        textSize=DEBUG_TEXT_SIZE
+    )
+
+    # 设置机器人位置和欧拉角的跟随文本
+    text_id = p.addUserDebugText(
+        text="",
+        textPosition=[ROBOT_POS[0], ROBOT_POS[1], ROBOT_POS[2] + 1],
+        textColorRGB=DEBUG_TEXT_COLOR,
+        textSize=DEBUG_TEXT_SIZE
+    )
+
+    # 增加控件，主要是重置用的reset按钮和调节全局参数的三个slider
+    """
+    slider控制的参数为：
+            MAX_FORCE 差分驱动轮的最大马力                          (>0)
+            TARGET_VELOCITY 差分驱动轮的最大速度                    (>0)
+            MULTIPLY 转弯时，差分驱动轮的两个轮子的速度之比（大的比上小的） (>1)
+    """
+    MAX_FORCE_param_id = p.addUserDebugParameter("MAX_FORCE", 0, 100, MAX_FORCE)
+    TARGET_VELOCITY_param_id = p.addUserDebugParameter("TARGET_VELOCITY", 0, 100, TARGET_VELOCITY)
+    MULTIPLY_param_id = p.addUserDebugParameter("MULTIPLY", 1, 10, MULTIPLY)
+
+    reset_btn_id = p.addUserDebugParameter("reset", 1, 0, 0)
+    previous_btn_value = p.readUserDebugParameter(reset_btn_id)
+
+
+    # 开始测试
+    # getJointInfo(robot_id)
+
+    while True:
+        # 获取三维坐标和欧拉角
+        basePos, baseOrientation = p.getBasePositionAndOrientation(robot_id)
+        baseEuler = p.getEulerFromQuaternion(baseOrientation)
+        # 读取并执行键盘信息
+        key_dict = p.getKeyboardEvents()
+        control_miniBox(key_dict)
+        # 读取并更新slider中的参数
+        MAX_FORCE = p.readUserDebugParameter(MAX_FORCE_param_id)
+        TARGET_VELOCITY = p.readUserDebugParameter(TARGET_VELOCITY_param_id)
+        MULTIPLY = p.readUserDebugParameter(MULTIPLY_param_id)
+        # 判断按钮是否被按下，若是，则重置机器人的位置
+        if p.readUserDebugParameter(reset_btn_id) != previous_btn_value:
+            p.resetBasePositionAndOrientation(robot_id, ROBOT_POS, ROBOT_Orientation)
+            previous_btn_value = p.readUserDebugParameter(reset_btn_id)
+        
+        # 更新debug文本
+        text = f"Pos:   {[round(x, 2) for x in basePos]}\n                    Euler: {[round(x, 2) for x in baseEuler]}"
+        text_id = p.addUserDebugText( 
+            text=text,
+            textPosition=[basePos[0], basePos[1], basePos[2] + 1],
+            textColorRGB=DEBUG_TEXT_COLOR,
+            textSize=DEBUG_TEXT_SIZE,
+            replaceItemUniqueId=text_id
+        )
+        # 计算离门的距离
+        distance = np.linalg.norm(np.array(basePos) - np.array(DOOR_POS))
+        text = f"Distance: {round(distance, 2)}"
+        door_id = p.addUserDebugText( 
+            text=text,
+            textPosition=[DOOR_POS[0], DOOR_POS[1], DOOR_POS[2] + 3],
+            textColorRGB=DEBUG_TEXT_COLOR,
+            textSize=DEBUG_TEXT_SIZE,
+            replaceItemUniqueId=door_id
+        )
+        setCameraPicAndGetPic(robot_id)
+    
+    p.disconnect(cid)
