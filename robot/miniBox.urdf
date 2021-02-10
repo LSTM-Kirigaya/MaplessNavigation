@@ -9,7 +9,7 @@
             <cylinder length="0.2" radius="0.5" />
         </geometry>
         <material name="white">
-            <color rgba="1 1 1 1"/>
+            <color rgba="0.90 0.91 0.95 1"/>
         </material>
         </visual>
         <!-- Base collision, mass and inertia -->
