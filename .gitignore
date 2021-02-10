@@ -1,5 +1,4 @@
-*.txt
-*.pyc
+doc/
 *.exe
 *.mp4
 log/
