@@ -13,6 +13,7 @@ from time import sleep
 from math import tan, sin, cos
 import numpy as np
 from pprint import pprint
+from yaml import load
 
 # constant var
 UP = p.B3G_DOWN_ARROW               
@@ -315,13 +316,15 @@ if __name__ == "__main__":
     # 连接引擎
     cid = p.connect(p.GUI)
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
+    p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
 
     # 添加资源路径
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
     # 载入机器人和其他的物件
     plane_id = p.loadURDF("plane.urdf", useMaximalCoordinates=True)
-    robot_id = p.loadURDF("./robot/miniBox.urdf", basePosition=ROBOT_POS, useMaximalCoordinates=True)
+    urdf_path = os.path.join(os.path.dirname(__file__), "miniBox.urdf")
+    robot_id = p.loadURDF(urdf_path, basePosition=ROBOT_POS, useMaximalCoordinates=True)
     ROBOT_POS, ROBOT_Orientation = p.getBasePositionAndOrientation(robot_id)
     # 加入几个足球
     # p.loadURDF("soccerball.urdf", basePosition=[3, 3, 0], useMaximalCoordinates=True)
@@ -432,7 +435,7 @@ if __name__ == "__main__":
         # 设置合成摄像头
         setCameraPicAndGetPic(robot_id)
         # 激光探测
-        froms, tos, results = rayTest(robot_id, ray_length=5)
+        froms, tos, results = rayTest(robot_id, ray_length=10.)
         for index, result in enumerate(results):
             color = MISS_COLOR if result[0] == -1 else HIT_COLOR
             rayDebugLineIds[index] = p.addUserDebugLine(
@@ -441,6 +444,5 @@ if __name__ == "__main__":
             )
         # 碰撞探测
         checkCollision(robot_id, debug=True)
-
 
     p.disconnect(cid)
