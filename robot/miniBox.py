@@ -54,3 +54,7 @@ class Robot(object):
             bodyUniqueId=self.robot,
             jointIndices=[self.LEFT_WHEEL_JOINT_INDEX, self.RIGHT_WHEEL_JOINT_INDEX]
         )
+
+
+if __name__ == "__main__":
+    pass
