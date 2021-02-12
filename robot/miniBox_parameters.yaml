@@ -1,0 +1,25 @@
+﻿# 机器人几何参数
+BASE_THICKNESS : 0.2                # 底盘厚度
+BASE_RADIUS : 0.5                   # 底盘半径
+WHEEL_THICKNESS : 0.1               # 轮子厚度
+WHEEL_RADIUS : 0.2                  # 轮子半径
+LEFT_WHEEL_JOINT_INDEX : 3          # 左轮joint索引
+RIGHT_WHEEL_JOINT_INDEX : 2         # 右轮joint索引
+
+LASER_LENGTH : 10.                  # 激光长度
+LASER_NUM : 5                       # 激光数量
+
+# 机器人动力学参数
+TARGET_VELOCITY : 10.               # 轮子最大角速度
+MAX_FORCE : 10.                     # 最大扭力
+MULTIPLY : 2.0                      # 左右轮速的倍数（仅在手动控制中使用）
+
+# debug 参数
+DEBUG_TEXT_COLOR : [0., 0., 0.]     # debug文本的颜色
+DEBUG_TEXT_SIZE : 1.2               # debug文本的大小
+MISS_COLOR : [0., 1., 0.]           # 没有命中的激光的颜色
+HIT_COLOR : [1., 0., 0.]            # 命中的激光的颜色
+RAY_DEBUG_LINE_WIDTH : 2.           # 激光的debug线的宽度
+
+# 其他参数
+MAX_DISTANCE : 100.                 # 机器人离目的地的最大距离
