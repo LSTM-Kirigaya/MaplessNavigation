@@ -1,3 +1,6 @@
 __all__ = [
-    "test_robot"
+    "miniBox",
+    "register",
+    "scene",
+    "utils"
 ]
