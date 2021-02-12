@@ -20,3 +20,6 @@ DEBUG_TEXT_SIZE : 1.2               # debug文本的大小
 MISS_COLOR : [0., 1., 0.]           # 没有命中的激光的颜色
 HIT_COLOR : [1., 0., 0.]            # 命中的激光的颜色
 RAY_DEBUG_LINE_WIDTH : 2.           # 激光的debug线的宽度
+
+# 其他参数
+MAX_DISTANCE : 100.                 # 机器人离目的地的最大距离
