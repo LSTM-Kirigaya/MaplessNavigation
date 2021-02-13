@@ -45,7 +45,7 @@ class Register(object):
 class Registers(object):
     def __init__(self):
         raise RuntimeError("Registers is not intended to be instantiated")
-
+    
     scenes = Register("scenes")
 
 def _handle_errors(errors : list):

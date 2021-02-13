@@ -64,9 +64,9 @@ miniBox关节信息如下：
 """
 
 # 获取节点信息
-def getJointInfo(robot_id : int):
-    for i in range(p.getNumJoints(robot_id)):
-        info = p.getJointInfo(robot_id, i)
+def getJointInfo(robot_id : int, physicsClientId : int = 0):
+    for i in range(p.getNumJoints(robot_id, physicsClientId=physicsClientId)):
+        info = p.getJointInfo(robot_id, i, physicsClientId=physicsClientId)
         print(f"""
             joint index: {info[0]},
             joint name:  {info[1]},
@@ -74,14 +74,15 @@ def getJointInfo(robot_id : int):
         """)
 
 # 根据输入的键盘字典执行小车运动
-def control_miniBox(key_dict : dict):
+def control_miniBox(key_dict : dict, physicsClientId : int = 0):
     if len(key_dict) == 0:
         p.setJointMotorControlArray(
                 bodyUniqueId=robot_id,
                 jointIndices=[LEFT_WHEEL_JOINT_INDEX, RIGHT_WHEEL_JOINT_INDEX],
                 controlMode=p.VELOCITY_CONTROL,
                 targetVelocities=[0, 0],
-                forces=[0, 0]
+                forces=[0, 0],
+                physicsClientId=physicsClientId
         )
     # 先判断是否按下了上键和左键或者上键和右键，如果是，则让机器人拐弯左前，或者拐弯右前
     if UP in key_dict and LEFT in key_dict:
@@ -90,7 +91,8 @@ def control_miniBox(key_dict : dict):
                 jointIndices=[LEFT_WHEEL_JOINT_INDEX, RIGHT_WHEEL_JOINT_INDEX],
                 controlMode=p.VELOCITY_CONTROL,
                 targetVelocities=[TARGET_VELOCITY / MULTIPLY, TARGET_VELOCITY],
-                forces=[MAX_FORCE, MAX_FORCE]
+                forces=[MAX_FORCE, MAX_FORCE],
+                physicsClientId=physicsClientId
         )
     elif UP in key_dict and RIGHT in key_dict:
         p.setJointMotorControlArray(
@@ -98,7 +100,8 @@ def control_miniBox(key_dict : dict):
                 jointIndices=[LEFT_WHEEL_JOINT_INDEX, RIGHT_WHEEL_JOINT_INDEX],
                 controlMode=p.VELOCITY_CONTROL,
                 targetVelocities=[TARGET_VELOCITY, TARGET_VELOCITY / MULTIPLY],
-                forces=[MAX_FORCE, MAX_FORCE]
+                forces=[MAX_FORCE, MAX_FORCE],
+                physicsClientId=physicsClientId
         )
     elif DOWN in key_dict and LEFT in key_dict:
         p.setJointMotorControlArray(
@@ -106,7 +109,8 @@ def control_miniBox(key_dict : dict):
                 jointIndices=[LEFT_WHEEL_JOINT_INDEX, RIGHT_WHEEL_JOINT_INDEX],
                 controlMode=p.VELOCITY_CONTROL,
                 targetVelocities=[-1. * TARGET_VELOCITY, -1. * TARGET_VELOCITY / MULTIPLY],
-                forces=[MAX_FORCE, MAX_FORCE]
+                forces=[MAX_FORCE, MAX_FORCE],
+                physicsClientId=physicsClientId
         )
     elif DOWN in key_dict and RIGHT in key_dict:
         p.setJointMotorControlArray(
@@ -114,7 +118,8 @@ def control_miniBox(key_dict : dict):
                 jointIndices=[LEFT_WHEEL_JOINT_INDEX, RIGHT_WHEEL_JOINT_INDEX],
                 controlMode=p.VELOCITY_CONTROL,
                 targetVelocities=[-1. * TARGET_VELOCITY / MULTIPLY, -1. * TARGET_VELOCITY],
-                forces=[MAX_FORCE, MAX_FORCE]
+                forces=[MAX_FORCE, MAX_FORCE],
+                physicsClientId=physicsClientId
         )
     # 前后左右
     elif UP in key_dict:
@@ -123,7 +128,8 @@ def control_miniBox(key_dict : dict):
                 jointIndices=[LEFT_WHEEL_JOINT_INDEX, RIGHT_WHEEL_JOINT_INDEX],
                 controlMode=p.VELOCITY_CONTROL,
                 targetVelocities=[TARGET_VELOCITY, TARGET_VELOCITY],
-                forces=[MAX_FORCE, MAX_FORCE]
+                forces=[MAX_FORCE, MAX_FORCE],
+                physicsClientId=physicsClientId
         )
     elif DOWN in key_dict:
         p.setJointMotorControlArray(
@@ -131,7 +137,8 @@ def control_miniBox(key_dict : dict):
                 jointIndices=[LEFT_WHEEL_JOINT_INDEX, RIGHT_WHEEL_JOINT_INDEX],
                 controlMode=p.VELOCITY_CONTROL,
                 targetVelocities=[-1. * TARGET_VELOCITY, -1. * TARGET_VELOCITY],
-                forces=[MAX_FORCE, MAX_FORCE]
+                forces=[MAX_FORCE, MAX_FORCE],
+                physicsClientId=physicsClientId
         )
     elif LEFT in key_dict:
         p.setJointMotorControlArray(
@@ -139,7 +146,8 @@ def control_miniBox(key_dict : dict):
                 jointIndices=[LEFT_WHEEL_JOINT_INDEX, RIGHT_WHEEL_JOINT_INDEX],
                 controlMode=p.VELOCITY_CONTROL,
                 targetVelocities=[-1. * TARGET_VELOCITY, TARGET_VELOCITY],
-                forces=[MAX_FORCE, MAX_FORCE]
+                forces=[MAX_FORCE, MAX_FORCE],
+                physicsClientId=physicsClientId
         )
     elif RIGHT in key_dict:
         p.setJointMotorControlArray(
@@ -147,18 +155,19 @@ def control_miniBox(key_dict : dict):
                 jointIndices=[LEFT_WHEEL_JOINT_INDEX, RIGHT_WHEEL_JOINT_INDEX],
                 controlMode=p.VELOCITY_CONTROL,
                 targetVelocities=[TARGET_VELOCITY, -1. * TARGET_VELOCITY],
-                forces=[MAX_FORCE, MAX_FORCE]
+                forces=[MAX_FORCE, MAX_FORCE],
+                physicsClientId=physicsClientId
         )
 
 # TODO： 2. 添加并测试摄像头、深度激光探测器
-def setCameraPicAndGetPic(robot_id : int, width : int = 224, height : int = 224):
+def setCameraPicAndGetPic(robot_id : int, width : int = 224, height : int = 224, physicsClientId : int = 0):
     """
     给合成摄像头设置图像并返回robot_id对应的图像
     摄像头的位置为miniBox前头的位置
     """
-    basePos, baseOrientation = p.getBasePositionAndOrientation(robot_id)
+    basePos, baseOrientation = p.getBasePositionAndOrientation(robot_id, physicsClientId=physicsClientId)
     # 从四元数中获取变换矩阵，从中获知指向(左乘(1,0,0)，因为在原本的坐标系内，摄像机的朝向为(1,0,0))
-    matrix = p.getMatrixFromQuaternion(baseOrientation)
+    matrix = p.getMatrixFromQuaternion(baseOrientation, physicsClientId=physicsClientId)
     tx_vec = np.array([matrix[0], matrix[3], matrix[6]])              # 变换后的x轴
     tz_vec = np.array([matrix[2], matrix[5], matrix[8]])              # 变换后的z轴
 
@@ -170,33 +179,36 @@ def setCameraPicAndGetPic(robot_id : int, width : int = 224, height : int = 224)
     viewMatrix = p.computeViewMatrix(
         cameraEyePosition=cameraPos,
         cameraTargetPosition=targetPos,
-        cameraUpVector=tz_vec
+        cameraUpVector=tz_vec,
+        physicsClientId=physicsClientId
     )
     projectionMatrix = p.computeProjectionMatrixFOV(
         fov=50.0,               # 摄像头的视线夹角
         aspect=1.0,
         nearVal=0.01,            # 摄像头焦距下限
-        farVal=20               # 摄像头能看上限
+        farVal=20,               # 摄像头能看上限
+        physicsClientId=physicsClientId
     )
 
     width, height, rgbImg, depthImg, segImg = p.getCameraImage(
         width=width, height=height,
         viewMatrix=viewMatrix,
-        projectionMatrix=projectionMatrix
+        projectionMatrix=projectionMatrix,
+        physicsClientId=physicsClientId
     )
     
     return width, height, rgbImg, depthImg, segImg
 
 # 添加门
-def addDoor(a : list, b : list, c : list, d : list, color : list = [0., 0., 0.], width : int = 1):
+def addDoor(a : list, b : list, c : list, d : list, color : list = [0., 0., 0.], width : int = 1, physicsClientId : int = 0):
     """
     a,b,c,d 代表门的四个角的坐标
     return: 勾勒出门的四条边的debug线的id
     """
-    ab = p.addUserDebugLine(a, b, lineColorRGB=color, lineWidth=width)
-    bc = p.addUserDebugLine(b, c, lineColorRGB=color, lineWidth=width)
-    cd = p.addUserDebugLine(c, d, lineColorRGB=color, lineWidth=width)
-    da = p.addUserDebugLine(d, a, lineColorRGB=color, lineWidth=width)
+    ab = p.addUserDebugLine(a, b, lineColorRGB=color, lineWidth=width, physicsClientId=physicsClientId)
+    bc = p.addUserDebugLine(b, c, lineColorRGB=color, lineWidth=width, physicsClientId=physicsClientId)
+    cd = p.addUserDebugLine(c, d, lineColorRGB=color, lineWidth=width, physicsClientId=physicsClientId)
+    da = p.addUserDebugLine(d, a, lineColorRGB=color, lineWidth=width, physicsClientId=physicsClientId)
     return ab, bc, cd, da
 
 """
@@ -204,39 +216,42 @@ def addDoor(a : list, b : list, c : list, d : list, color : list = [0., 0., 0.],
     因此所有的pos参数的第三维正常情况下都是0，代表紧贴地面
 """
 # 添加圆柱体实体
-def addCylinder(pos : list, raidus : float, length : float, mass : float = 10000., rgba : list = [1. ,1. ,1., 1.]):
-    visual_shape = p.createVisualShape(p.GEOM_CYLINDER, radius=raidus, length=length, rgbaColor=rgba)
-    collision_shape = p.createCollisionShape(p.GEOM_CYLINDER, radius=raidus, height=length)
+def addCylinder(pos : list, raidus : float, length : float, mass : float = 10000., rgba : list = [1. ,1. ,1., 1.], physicsClientId : int = 0):
+    visual_shape = p.createVisualShape(p.GEOM_CYLINDER, radius=raidus, length=length, rgbaColor=rgba, physicsClientId=physicsClientId)
+    collision_shape = p.createCollisionShape(p.GEOM_CYLINDER, radius=raidus, height=length, physicsClientId=physicsClientId)
     entity_id = p.createMultiBody(
         baseMass=mass,
         baseCollisionShapeIndex=collision_shape,
         baseVisualShapeIndex=visual_shape,
-        basePosition=[pos[0], pos[1], pos[2] + length / 2.]
+        basePosition=[pos[0], pos[1], pos[2] + length / 2.],
+        physicsClientId=physicsClientId
     )
     return entity_id
 
-def addSphere(pos : list, radius : float, mass : float = 10000., rgba : list = [1., 1. ,1., 1.]):
-    visual_shape = p.createVisualShape(p.GEOM_SPHERE, radius=radius, rgbaColor=rgba)
-    collision_shape = p.createCollisionShape(p.GEOM_SPHERE, radius=radius)
+def addSphere(pos : list, radius : float, mass : float = 10000., rgba : list = [1., 1. ,1., 1.], physicsClientId : int = 0):
+    visual_shape = p.createVisualShape(p.GEOM_SPHERE, radius=radius, rgbaColor=rgba, physicsClientId=physicsClientId)
+    collision_shape = p.createCollisionShape(p.GEOM_SPHERE, radius=radius, physicsClientId=physicsClientId)
     entity_id = p.createMultiBody(
         baseMass=mass,
         baseCollisionShapeIndex=collision_shape,
         baseVisualShapeIndex=visual_shape,
-        basePosition=[pos[0], pos[1], pos[2] + radius]
+        basePosition=[pos[0], pos[1], pos[2] + radius],
+        physicsClientId=physicsClientId
     )
     return entity_id
 
-def addBox(pos : list, halfExtents : list, mass : float = 10000., rgba=[1., 1., 1., 1.]):
-    visual_shape = p.createVisualShape(p.GEOM_BOX, halfExtents=halfExtents, rgbaColor=rgba)
-    collision_shape = p.createCollisionShape(p.GEOM_BOX, halfExtents=halfExtents)
+def addBox(pos : list, halfExtents : list, mass : float = 10000., rgba=[1., 1., 1., 1.], physicsClientId : int = 0):
+    visual_shape = p.createVisualShape(p.GEOM_BOX, halfExtents=halfExtents, rgbaColor=rgba, physicsClientId=physicsClientId)
+    collision_shape = p.createCollisionShape(p.GEOM_BOX, halfExtents=halfExtents, physicsClientId=physicsClientId)
     entity_id = p.createMultiBody(
         baseMass=mass,
         baseCollisionShapeIndex=collision_shape,
         baseVisualShapeIndex=visual_shape,
-        basePosition=[pos[0], pos[1], pos[2] + halfExtents[2]]
+        basePosition=[pos[0], pos[1], pos[2] + halfExtents[2]],
+        physicsClientId=physicsClientId
     )
 
-def addFence(center_pos : list, internal_length : float, internal_width : float, height : float, thickness : float, mass : float = 10000., rgba : list = [1., 1., 1., 1.]):
+def addFence(center_pos : list, internal_length : float, internal_width : float, height : float, thickness : float, mass : float = 10000., rgba : list = [1., 1., 1., 1.], physicsClientId : int = 0):
     """
     :param center_pos:      围墙中心的坐标
     :param internal_length: 内部长
@@ -251,38 +266,42 @@ def addFence(center_pos : list, internal_length : float, internal_width : float,
         pos=[center_pos[0] + internal_width / 2. + thickness / 2., center_pos[1], center_pos[2]],
         halfExtents=[thickness / 2., internal_length / 2. + thickness, height / 2.],
         mass=mass / 4.,
-        rgba=rgba
+        rgba=rgba,
+        physicsClientId=physicsClientId
     )
     L2 = addBox(
         pos=[center_pos[0] - internal_width / 2. - thickness / 2., center_pos[1], center_pos[2]],
         halfExtents=[thickness / 2., internal_length / 2. + thickness, height / 2.],
         mass=mass / 4.,
-        rgba=rgba
+        rgba=rgba,
+        physicsClientId=physicsClientId
     )
     # W1和W2代表宽那条线面对面的两面墙，长度为internal_length + 2 * thickness
     W1 = addBox(
         pos=[center_pos[0], center_pos[1] + internal_length / 2. + thickness / 2., center_pos[2]],
         halfExtents=[internal_width / 2., thickness / 2., height / 2.],
         mass=mass / 4.,
-        rgba=rgba
+        rgba=rgba,
+        physicsClientId=physicsClientId
     )
     W2 = addBox(
         pos=[center_pos[0], center_pos[1] - internal_length / 2. - thickness / 2., center_pos[2]],
         halfExtents=[internal_width / 2., thickness / 2., height / 2.],
         mass=mass / 4.,
-        rgba=rgba
+        rgba=rgba,
+        physicsClientId=physicsClientId
     )
     return L1, L2, W1, W2
 
 # 进行一组激光探测
-def rayTest(robot_id : int, ray_length : float, ray_num : int = 5):
+def rayTest(robot_id : int, ray_length : float, ray_num : int = 5, physicsClientId : int = 0):
     """
     :param robot_id:   不多说
     :param ray_length: 激光长度
     :param ray_num:    激光数量(需要说明，激光头均匀分布在-pi/2到pi/2之间)
     """
-    basePos, baseOrientation = p.getBasePositionAndOrientation(robot_id)
-    matrix = p.getMatrixFromQuaternion(baseOrientation)
+    basePos, baseOrientation = p.getBasePositionAndOrientation(robot_id, physicsClientId=physicsClientId)
+    matrix = p.getMatrixFromQuaternion(baseOrientation, physicsClientId=physicsClientId)
     basePos = np.array(basePos)
     matrix = np.array(matrix).reshape([3, 3])
 
@@ -293,11 +312,11 @@ def rayTest(robot_id : int, ray_length : float, ray_num : int = 5):
     # 通过广播运算得到世界坐标系中所有激光发射点的坐标
     rayBegins = basePos + BASE_RADIUS * unitRayVecs
     rayTos = rayBegins + ray_length * unitRayVecs
-    results = p.rayTestBatch(rayBegins, rayTos)
+    results = p.rayTestBatch(rayBegins, rayTos, physicsClientId=physicsClientId)
     return rayBegins, rayTos, results
 
-def checkCollision(robot_id : int, debug : bool):
-    if p.getContactPoints(bodyA=robot_id, linkIndexA=-1):
+def checkCollision(robot_id : int, debug : bool, physicsClientId : int = 0):
+    if p.getContactPoints(bodyA=robot_id, linkIndexA=-1, physicsClientId=physicsClientId):
         print("collsion happen!")
         return True
     # P_min, P_max = p.getAABB(robot_id)
@@ -323,7 +342,7 @@ if __name__ == "__main__":
 
     # 载入机器人和其他的物件
     plane_id = p.loadURDF("plane.urdf", useMaximalCoordinates=True)
-    urdf_path = os.path.join(os.path.dirname(__file__), "miniBox.urdf")
+    urdf_path = os.path.join(os.path.dirname(__file__), "urdf\\miniBox.urdf")
     robot_id = p.loadURDF(urdf_path, basePosition=ROBOT_POS, useMaximalCoordinates=True)
     ROBOT_POS, ROBOT_Orientation = p.getBasePositionAndOrientation(robot_id)
     # 加入几个足球

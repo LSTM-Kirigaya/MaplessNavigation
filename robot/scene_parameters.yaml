@@ -1,6 +1,0 @@
-# 无特别说明，所有单位均为SI标准下的单位
-MAP_TYPE : "Scene1"     # 代表选择的场景类的名字
-INTERNAL_LENGTH : 20    # 围墙的内矩形长
-INTERNAL_WIDTH : 20     # 围墙的内矩形宽
-HEIGTH : 4              # 围墙高度
-THICKNESS : 2           # 围墙厚度

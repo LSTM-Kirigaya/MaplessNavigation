@@ -1,0 +1,12 @@
+# 无特别说明，所有单位均为SI标准下的单位
+MAP_TYPE : "plane_static_obstacle-A"      # 代表选择的场景类的名字
+
+CENTER_POS : [0., 0., 0.]                 # 围墙中心坐标
+INTERNAL_LENGTH : 20                      # 围墙的内矩形长
+INTERNAL_WIDTH : 20                       # 围墙的内矩形宽
+HEIGHT : 4                                # 围墙高度
+THICKNESS : 2                             # 围墙厚度
+FENCE_MASS : 10000.                       # 围墙重量
+FENCE_COLOR : [1., 1., 1., 1.]            # 围墙颜色
+
+USE_MAX_COOR : True                       # 是否使用最大化坐标刻度

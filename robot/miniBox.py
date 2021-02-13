@@ -4,11 +4,12 @@ path = os.path.dirname(__file__)
 path = "/".join(path.split("\\")[:-1])
 sys.path.append(path)
 from robot.utils import *
+from functools import partial
 
 class Robot(object):
     def __init__(self, client : int = 0, basePos : list = [0., 0., 0.], baseOri : list = [0., 0., 0., 1.], useMaxCoor : bool = True):
         self.client = client
-        urdf_path = os.path.join(os.path.dirname(__file__), "miniBox.urdf")
+        urdf_path = os.path.join(os.path.dirname(__file__), "urdf\\miniBox.urdf")
         self.robot = p.loadURDF(
             fileName=urdf_path,
             basePosition=basePos,
@@ -18,11 +19,12 @@ class Robot(object):
         )
         
         # 读入各项参数
-        param_path = os.path.join(os.path.dirname(__file__), "robot_parameters.yaml")
+        param_path = os.path.join(os.path.dirname(__file__), "config\\miniBox_parameters.yaml")
         param_dict = load(open(param_path, "r", encoding="utf-8"), Loader=Loader)
         for key, value in param_dict.items():
             setattr(self, key, value)
-        self.clipv = lambda x : np.clip(x, -self.TARGET_VELOCITY, self.TARGET_VELOCITY)
+        # 该偏函数用于将输入的速度进行合适的裁剪
+        self.clipv = partial(np.clip, a_min=-self.TARGET_VELOCITY, a_max=self.TARGET_VELOCITY)
 
     def get_bothId(self):
         return self.client, self.robot

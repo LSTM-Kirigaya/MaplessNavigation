@@ -14,7 +14,7 @@ class maplessNaviEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     def __init__(self, wheel_velocity_max : float = 10.):
         # 读入各项参数
-        param_path = os.path.join(os.path.dirname(__file__), "robot_parameters.yaml")
+        param_path = os.path.join(os.path.dirname(__file__), "config/miniBox_parameters.yaml")
         param_dict = load(open(param_path, "r", encoding="utf-8"), Loader=Loader)
         for key, value in param_dict.items():
             setattr(self, key, value)
