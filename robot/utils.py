@@ -16,13 +16,13 @@ from pprint import pprint
 from yaml import load, Loader
 
 # constant var
-UP = p.B3G_DOWN_ARROW               
-DOWN = p.B3G_UP_ARROW
-LEFT = p.B3G_RIGHT_ARROW
-RIGHT = p.B3G_LEFT_ARROW
+UP = p.B3G_UP_ARROW          
+DOWN = p.B3G_DOWN_ARROW
+LEFT = p.B3G_LEFT_ARROW
+RIGHT = p.B3G_RIGHT_ARROW
 
 R2D2_POS = [1., 1., 1.]
-ROBOT_POS = [0., 0., 0.5]
+ROBOT_POS = [0., 0., 0.2]
 DOOR_POS = [-2, 0, 0]
 
 LEFT_WHEEL_JOINT_INDEX = 3
@@ -159,7 +159,6 @@ def control_miniBox(key_dict : dict, physicsClientId : int = 0):
                 physicsClientId=physicsClientId
         )
 
-# TODO： 2. 添加并测试摄像头、深度激光探测器
 def setCameraPicAndGetPic(robot_id : int, width : int = 224, height : int = 224, physicsClientId : int = 0):
     """
     给合成摄像头设置图像并返回robot_id对应的图像
@@ -317,7 +316,8 @@ def rayTest(robot_id : int, ray_length : float, ray_num : int = 5, physicsClient
 
 def checkCollision(robot_id : int, debug : bool, physicsClientId : int = 0):
     if p.getContactPoints(bodyA=robot_id, linkIndexA=-1, physicsClientId=physicsClientId):
-        print("collsion happen!")
+        if debug:
+            print("collsion happen!")
         return True
     # P_min, P_max = p.getAABB(robot_id)
     # id_tuple = p.getOverlappingObjects(P_min, P_max)
@@ -341,9 +341,9 @@ if __name__ == "__main__":
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
     # 载入机器人和其他的物件
-    plane_id = p.loadURDF("plane.urdf", useMaximalCoordinates=True)
+    plane_id = p.loadURDF("plane.urdf")
     urdf_path = os.path.join(os.path.dirname(__file__), "urdf\\miniBox.urdf")
-    robot_id = p.loadURDF(urdf_path, basePosition=ROBOT_POS, useMaximalCoordinates=True)
+    robot_id = p.loadURDF(urdf_path, basePosition=ROBOT_POS, baseOrientation=p.getQuaternionFromEuler([0, 0, np.pi / 2.]))
     ROBOT_POS, ROBOT_Orientation = p.getBasePositionAndOrientation(robot_id)
     # 加入几个足球
     # p.loadURDF("soccerball.urdf", basePosition=[3, 3, 0], useMaximalCoordinates=True)
@@ -428,7 +428,9 @@ if __name__ == "__main__":
         TARGET_VELOCITY = p.readUserDebugParameter(TARGET_VELOCITY_param_id)
         MULTIPLY = p.readUserDebugParameter(MULTIPLY_param_id)
         # 判断按钮是否被按下，若是，则重置机器人的位置
+        # TODO: reset机制有点问题，问题在于 resetBasePositionAndOrientation 函数只能重置base的位置，对于其余的link，会因扯回来的惯性而破坏平衡性
         if p.readUserDebugParameter(reset_btn_id) != previous_btn_value:
+            
             p.resetBasePositionAndOrientation(robot_id, ROBOT_POS, ROBOT_Orientation)
             previous_btn_value = p.readUserDebugParameter(reset_btn_id)
         

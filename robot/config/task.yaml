@@ -1,0 +1,12 @@
+# 起点与终点
+DEPART_POS : [0., -9., 0.]          # 起点的坐标
+DEPART_EULER : [0., 0., 1.5707963]  # 起点处机器人的位姿的欧拉角表示
+TARGET_POS : [0., 9., 0.]           # 终点的坐标
+
+# reward中的参数
+COLLISION_REWARD : -10              # 碰撞一次的奖励值（负数代表惩罚）
+REACH_TARGET_REWARD : 10            # 到达终点的奖励
+DISTANCE_REWARD_COE : -0.01         # 每次结算奖励时，距离奖励的系数
+
+DONE_DISTANCE : 1.                  # 判定episode结束的距离阈值
+DONE_COLLISION : 50                 # 判定episode结束的碰撞次数阈值

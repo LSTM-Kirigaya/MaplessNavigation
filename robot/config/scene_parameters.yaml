@@ -9,4 +9,4 @@ THICKNESS : 2                             # 围墙厚度
 FENCE_MASS : 10000.                       # 围墙重量
 FENCE_COLOR : [1., 1., 1., 1.]            # 围墙颜色
 
-USE_MAX_COOR : True                       # 是否使用最大化坐标刻度
+USE_MAX_COOR : False                      # 是否使用最大化坐标刻度
