@@ -182,7 +182,7 @@ class RegisterScenes(object):
 if __name__ == "__main__":
     cid = p.connect(p.GUI)
     register_scenes = RegisterScenes()
-    scene = register_scenes.construct("plane_static_obstacle-A")
+    scene = register_scenes.construct("plane_static_obstacle-C")
     
     btn_id = p.addUserDebugParameter("reset", 1, 0, 0)
     previous = p.readUserDebugParameter(btn_id)

@@ -1,0 +1,10 @@
+ACTOR_LR : 0.00002                # learning rate for actor net
+CRITIC_LR : 0.0001                # learning rate for critic net
+GAMMA : 0.99                      # decay factor of reward, range from 0.9 to 0.99
+TAU : 0.001                       # parameter for soft updating
+MEMORY_SIZE : 1000000             # size of replay memory
+MEMORY_WARMUP_SIZE : 10000        # this parameter decide how many pieces of data we need to restore before training
+REWARD_SCALE : 0.01               # scaling factor for reward
+BATCH_SIZE : 256                  # batch size
+TRAIN_TOTAL_STEPS : 1000000       # total steps for training
+TEST_EVERY_STEPS : 10000          # intervals we test the model
