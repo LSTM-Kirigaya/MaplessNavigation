@@ -51,7 +51,7 @@ class MaplessNaviEnv(gym.Env):
         
         Rs = 0
 
-        if state[-2] < 1.:
+        if state[-2] < self.TARGET_RADIUS:
             Rg = self.REACH_TARGET_REWARD
         else:
             Rg = self.DISTANCE_REWARD_COE * self.__distance(self.robot.curPos(), self.TARGET_POS) / self.__distance(self.DEPART_POS, self.TARGET_POS)
