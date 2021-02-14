@@ -1,2 +1,8 @@
+stable_baselines3==0.10.0
 numpy==1.18.5
+paddlepaddle==1.8.0
 pybullet==3.0.8
+env==0.1.0
+paddle==1.0.2
+parl==1.4.1
+PyYAML==5.4.1
