@@ -91,33 +91,3 @@ When distance between miniBox and target point is less than `DONE_DISTANCE` m or
 
 > The logic will be adjusted in the future
 
----
-
-## Reward function
-
-As the current task my project team studies only takes static obstacles into consideration, our reward function is:
-
-$$
-\mathcal{R}(s)=\mathcal{R_e}(s)+\mathcal{R_g}(s)
-$$
-
-where 
-
-$$
-\begin{aligned}
-    R_e&=
-    \begin{cases} 
-    \text{COLLISION\_REWARD}&\text{if collision happens}\\ 
-    0&\text{else} 
-    \end{cases}\\
-    R_g&=
-    \begin{cases} 
-    \text{REACH\_TARGET\_REWARD}&\text{if }||p-p^*||_2>\text{TARGET\_RADIUS}\\ 
-    \text{DISTANCE\_REWARD\_COE}\times \frac{||p-p^*||_2}{||p_0-p^*||_2}&\text{else} 
-    \end{cases}
-\end{aligned}
-
-$$
-
-> $p$ is current position of robot, $p^*$ is the target position, $p_0$ is the departure position, other parameters mentioned are all defined in `task.yaml`
-
