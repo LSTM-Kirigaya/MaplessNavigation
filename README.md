@@ -12,7 +12,7 @@ Reinforcement learning algorithm for mapless navigation
 
 Use pybullet to build env RL algorithm needs. Robot used in the project is `miniBox`, which is described in `.\robot\miniBox.urdf`.
 
-`miniBox` is a differentially dirven robot.
+`miniBox` is a differentially driven robot.
 
 <center>
     <img style="border-radius: 0.3125em;
