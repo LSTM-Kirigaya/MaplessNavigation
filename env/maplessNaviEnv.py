@@ -72,11 +72,14 @@ class MaplessNaviEnv(gym.Env):
         """
         self.robot.apply_action(action=action)
         p.stepSimulation(physicsClientId=self._physics_client_id)    
+        self.step_num += 1
         state = self.robot.get_observation(self.TARGET_POS)
         reward = self.__reward_func(state)
         if state[-2] < self.DONE_DISTANCE:
             done = True
         elif self.collision_num > self.DONE_COLLISION:
+            done = True
+        elif self.step_num > 72000:
             done = True
         else:
             done = False
@@ -92,7 +95,7 @@ class MaplessNaviEnv(gym.Env):
         p.resetSimulation(physicsClientId=self._physics_client_id)
         p.setGravity(0., 0., -9.8, physicsClientId=self._physics_client_id)
         p.setRealTimeSimulation(0)
-
+        self.step_num = 0
         # print("\033[32m enter \033[0m")
         self.collision_num = 0
         self.robot = Robot(

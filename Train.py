@@ -19,12 +19,15 @@ def run_episode(env : Env, agent : parl.Agent, rpm : ReplayMemory):
     obs = env.reset()
     while True:
         steps += 1
-        batch_obs = np.expand_dims(obs, axis=0)
-        action = agent.predict(batch_obs.astype("float32"))
-        action = np.squeeze(action)
+        if np.random.random() < param_dict["EPSILON"]:
+            action = np.random.uniform(-1., 1., size=(2,))
+        else:
+            batch_obs = np.expand_dims(obs, axis=0)
+            action = agent.predict(batch_obs.astype("float32"))
+            action = np.squeeze(action)
+            # add guassion noise, clip, map to corresponding interval
+            action = np.clip(np.random.normal(action, 1.0), -1., 1.)
 
-        # add guassion noise, clip, map to corresponding interval
-        action = np.clip(np.random.normal(action, 1.0), -1.0, 1.0)
         action = action_mapping(action, env.action_space.low[0], env.action_space.high[0]) 
 
         next_obs, reward, done, info = env.step(action)
@@ -43,24 +46,22 @@ def run_episode(env : Env, agent : parl.Agent, rpm : ReplayMemory):
             break
     return total_reward, steps
 
-def evaluate(env : Env, agent : parl.Agent):
-    eval_reward = []
-    for i in range(5):          # evaluate 5 episodes
-        obs = env.reset()
-        total_reward, steps = 0., 0
-        while True:
-            steps += 1
-            batch_obs = np.expand_dims(obs, axis=0)
-            action = agent.predict(batch_obs)
-            action = np.clip(action, -1., 1.)
-            action = np.squeeze(action)
-            action = action_mapping(action, env.action_space.low[0], env.action_space.high[0])
+def evaluate(env : Env, agent : parl.Agent):       
+    obs = env.reset()
+    total_reward, steps = 0., 0
+    while True:
+        steps += 1
+        batch_obs = np.expand_dims(obs, axis=0)
+        action = agent.predict(batch_obs)
+        action = np.clip(action, -1., 1.)
+        action = np.squeeze(action)
+        action = action_mapping(action, env.action_space.low[0], env.action_space.high[0])
 
-            next_obs, reward, done, info = env.step(action)
-            obs = next_obs
-            total_reward += reward
-            
-            if done:
-                break
-        eval_reward.append(total_reward)
-    return np.mean(eval_reward)
+        next_obs, reward, done, info = env.step(action)
+        obs = next_obs
+        total_reward += reward
+        
+        if done:
+            break
+
+    return total_reward, info               

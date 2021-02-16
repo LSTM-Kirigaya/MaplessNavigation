@@ -24,8 +24,9 @@ agent = Agent(
 rpm = ReplayMemory(int(param_dict["MEMORY_SIZE"]), obs_dim, act_dim)
 
 # persistence training
-save_path = "./model.ckpt"
+save_path = "./model/s_550168_r_-513"
 if os.path.exists(save_path):
+    print(f"\033[33mload existing model\033[0m: {save_path}")
     agent.restore(save_path=save_path)
 
 test_flag, total_steps = 0, 0
@@ -36,11 +37,12 @@ while total_steps < param_dict["TRAIN_TOTAL_STEPS"]:
     # because total_steps are not increased step by step, we need to set a threshold instead of use mod
     if total_steps // param_dict["TEST_EVERY_STEPS"] >= test_flag:
         test_flag += total_steps // param_dict["TEST_EVERY_STEPS"] - test_flag + 1
-        evaluate_reward = evaluate(env, agent)
-        logger.info("Steps {}, Test reward: {}".format(
-            total_steps, evaluate_reward
+        evaluate_reward, info = evaluate(env, agent)
+        logger.info("Steps: {} | Test reward: {} | distance: {} | collision : {}".format(
+            total_steps, round(evaluate_reward, 2), round(info["distance"], 2), info["collision_num"]
         ))
         
         # save model
         save_path = "./model/s_{}_r_{}".format(total_steps, int(evaluate_reward))
         agent.save(save_path=save_path)
+        
