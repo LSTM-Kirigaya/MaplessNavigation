@@ -9,7 +9,7 @@ sys.path.append(path)
 from Train import *
 from env.maplessNaviEnv import *
 
-env = MaplessNaviEnv(scene_name='plane_static_obstacle-A', render=True)
+env = MaplessNaviEnv(scene_name='plane_static_obstacle-A', render=True, evaluate=True)
 obs_dim = env.observation_space.shape[0]
 act_dim = env.action_space.shape[0]
 
@@ -28,12 +28,21 @@ agent = Agent(
     act_dim=act_dim
 )
 
-agent.restore("./model/s_550168_r_-513")
+# ./model/2021.2.25/s_72001_r_963976
+# ./model/2021.2.26/s_592286_r_884427
+# ./model/2021.2.26/s_615055_r_977890
+# ./model/2021.2.26/s_759057_r_700960
+# ./model/2021.2.26/s_778768_r_881551
 
-p.setRealTimeSimulation(1)
-obs = env.reset()
-while True:
-    action = agent.predict(obs)[0]
-    obs, reward, done, info = env.step(action=action)
-    if done:
-        break
+agent.restore("./model/2021.3.19(plane_static_obstacle-B)/s_504007_r_-7769767")
+
+reward, info = evaluate(env, agent)
+print(reward)
+print(info)
+# p.setRealTimeSimulation(1)
+# obs = env.reset()
+# while True:
+#     action = agent.predict(obs)[0]
+#     obs, reward, done, info = env.step(action=action)
+#     if done:
+#         break

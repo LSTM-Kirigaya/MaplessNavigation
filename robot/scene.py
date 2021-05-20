@@ -92,14 +92,14 @@ class Scene2(BaseScene):
         )
 
         self.load_items["obstacle1"] = addBox(
-            pos=[0., -4., 0.],
-            halfExtents=[6., 1., 1.5 / 4. * self.HEIGHT],
+            pos=[-3., -4., 0.],
+            halfExtents=[7., 1., 1.5 / 4. * self.HEIGHT],
             physicsClientId=self._physics_client_id
         )
 
         self.load_items["obstacle2"] = addBox(
-            pos=[0., 4., 0.],
-            halfExtents=[6., 1., 1.5 / 4. * self.HEIGHT],
+            pos=[3., 4., 0.],
+            halfExtents=[7., 1., 1.5 / 4. * self.HEIGHT],
             physicsClientId=self._physics_client_id
         )
 
@@ -182,7 +182,7 @@ class RegisterScenes(object):
 if __name__ == "__main__":
     cid = p.connect(p.GUI)
     register_scenes = RegisterScenes()
-    scene = register_scenes.construct("plane_static_obstacle-C")
+    scene = register_scenes.construct("plane_static_obstacle-B")
     
     btn_id = p.addUserDebugParameter("reset", 1, 0, 0)
     previous = p.readUserDebugParameter(btn_id)

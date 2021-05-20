@@ -20,6 +20,6 @@ RAY_DEBUG_LINE_WIDTH : 2.           # 激光的debug线的宽度
 
 # 其他参数
 MAX_DISTANCE : 100.                 # 机器人离目的地的最大距离
-LASER_LENGTH : 10.                  # 激光长度
-LASER_NUM : 5                       # 激光数量
+LASER_LENGTH : 18.                  # 激光长度
+LASER_NUM : 11                      # 激光数量
 USE_MAX_COOR : False                # 是否使用最大化坐标刻度

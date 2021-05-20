@@ -1,5 +1,9 @@
 doc/
 *.exe
 *.mp4
+*.pdf
 log/
+tex/
+paper/
+model/
 __pycache__
